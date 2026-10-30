@@ -1,40 +1,41 @@
 import Foundation
 
 protocol APIServiceProtocol: Sendable {
-    func get<T: Decodable & Sendable>(
+    func get<T: Decodable>(
         _ endpoint: String,
         as type: T.Type
     ) async throws -> T
 }
 
+
+
+// Usage:
 enum APIError: Error {
     case invalidResponse
     case httpError(statusCode: Int)
     case decodingError(Error)
 }
 
-final class APIService: APIServiceProtocol {
+final actor APIService: APIServiceProtocol {
+    private var baseURL: URL {
+        URL(string: "https://rickandmortyapi.com/api")!
+    }
 
-    private let baseURL: URL
     private let session: URLSession
     private let decoder: JSONDecoder
 
-    init(
-        baseURL: URL,
-        session: URLSession = .shared,
-        decoder: JSONDecoder = JSONDecoder()
-    ) {
-        self.baseURL = baseURL
+    init(session: URLSession = .shared,
+         decoder: JSONDecoder = JSONDecoder()) {
         self.session = session
         self.decoder = decoder
     }
 
-    func get<T: Decodable & Sendable>(
+    nonisolated func get<T: Decodable>(
         _ endpoint: String,
         as type: T.Type
     ) async throws -> T {
         
-        let url = baseURL.appending(path: endpoint)
+        let url = await baseURL.appending(path: endpoint)
         let (data, response) = try await session.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -48,6 +49,7 @@ final class APIService: APIServiceProtocol {
         }
 
         do {
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
             return try decoder.decode(T.self, from: data)
         } catch {
             throw  APIError.decodingError(error)
