@@ -1,8 +1,7 @@
-
 // MARK: - CharactersModelResponse
 struct CharactersModel: Codable {
     let info: Info
-    let results: [Result]
+    let results: [CharactersResponseResult]
 
     enum CodingKeys: String, CodingKey {
         case info = "info"
@@ -19,7 +18,7 @@ struct Info: Codable {
 }
 
 // MARK: - Result
-struct Result: Codable, Hashable {
+struct CharactersResponseResult: Codable, Hashable {
     let id: Int
     let name: String
     let status: Status
