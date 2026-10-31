@@ -22,7 +22,7 @@ struct CharactersView: View {
             List(viewModel.uiModelResult, id: \.id) { item in
                 HStack {
                     HStack(spacing: 8) {
-                        KingfisherImageView(item.image)
+                        KingfisherImageView(image: item.image)
                         VStack(alignment: .leading) {
                             Text(item.name.prefix(20))
                                 .font(.headline)
@@ -39,6 +39,7 @@ struct CharactersView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Characters")
+            .background(Color.secondary.opacity(0.15).ignoresSafeArea()) 
         }
         .task {
             do {
@@ -51,5 +52,6 @@ struct CharactersView: View {
 }
 
 #Preview {
+    //here need to add preview so that without running code we can able to see
     CharactersView()
 }

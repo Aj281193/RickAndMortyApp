@@ -4,9 +4,13 @@ import Kingfisher
 struct KingfisherImageView: View {
     
     private let image: String
+    private let width: CGFloat
+    private let height: CGFloat
     
-    init(_ image: String) {
+    init(image: String, width: CGFloat = 80, height: CGFloat = 80) {
         self.image = image
+        self.width = width
+        self.height = height
     }
     
     var body: some View {
@@ -17,7 +21,7 @@ struct KingfisherImageView: View {
             .fade(duration: 0.25)
             .resizable()
             .scaledToFit()
-            .frame(width: 80, height: 80)
+            .frame(width: width, height: height)
     }
 }
 
