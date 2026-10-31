@@ -1,6 +1,7 @@
 import Foundation
 
 struct UIModel {
+    let id: Int
     let name: String
     let image: String
     let episode: [String]
@@ -14,6 +15,7 @@ struct UIModel {
 extension UIModel {
     
     init(from character: CharactersResponseResult) {
+        self.id = character.id
         self.name = character.name
         self.image = character.image
         self.episode = character.episode
