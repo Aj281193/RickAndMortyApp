@@ -8,26 +8,44 @@
 import SwiftUI
 
 struct CharactersView: View {
-    @State private var pageNumber = 20
+    
+    @StateObject private var viewModel: CharacterViewModel
+    
+    init() {
+        let service = APIService()
+        let repository = CharacterRepository(service: service)
+        self._viewModel = StateObject(wrappedValue: CharacterViewModel(repository))
+    }
+    
     var body: some View {
         NavigationStack {
-            List(0..<10) {_ in
-                HStack(spacing: 8) {
-                    Image(systemName: "heart.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .foregroundColor(.blue)
-                    VStack(alignment: .leading) {
-                        Text("Morty")
-                            .font(.headline)
-                        Text("Number of Episode: \(pageNumber)")
-                            .font(.subheadline)
+            List(viewModel.uiModelResult, id: \.id) { item in
+                HStack {
+                    HStack(spacing: 8) {
+                        KingfisherImageView(item.image)
+                        VStack(alignment: .leading) {
+                            Text(item.name.prefix(20))
+                                .font(.headline)
+                            Text("Episodes: \(item.episode.count)")
+                                .font(.subheadline)
+                        }
                     }
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                                            .font(.system(.footnote, design: .default).weight(.semibold))
+                                            .foregroundColor(Color(UIColor.tertiaryLabel))
                 }
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
             .navigationTitle("Characters")
+        }
+        .task {
+            do {
+                try await viewModel.getCharacters()
+            } catch {
+                print("Failed to load characters: \(error)")
+            }
         }
     }
 }
