@@ -16,9 +16,12 @@ struct CharactersDetailView: View {
     }
      
     var body: some View {
-        NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
-                KingfisherImageView(image: characterDetails.image, width: 350, height: 350)
+                KingfisherImageView(
+                    image: characterDetails.image,
+                    width: 350,
+                    height: 350
+                )
                 HStack {
                     Text(characterDetails.name)
                         .font(.headline)
@@ -27,12 +30,12 @@ struct CharactersDetailView: View {
                         .padding(.trailing, 10)
                 }
                 VStack(alignment: .leading) {
-                    HStack {
+                    HStack(spacing: 20) {
                         StatusBadgeView(status: characterDetails.status)
                         ChipView(text: characterDetails.species)
                         ChipView(text: characterDetails.gender)
                         ChipView(text: characterDetails.location)
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -40,7 +43,6 @@ struct CharactersDetailView: View {
             .navigationTitle("Character Details")
             .navigationBarTitleDisplayMode(.large)
             .background(Color.secondary.opacity(0.15).ignoresSafeArea()) 
-        }
     }
 }
 

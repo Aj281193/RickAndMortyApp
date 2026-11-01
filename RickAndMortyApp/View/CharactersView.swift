@@ -20,38 +20,52 @@ struct CharactersView: View {
     var body: some View {
         NavigationStack {
             List(viewModel.uiModelResult, id: \.id) { item in
-                HStack {
-                    HStack(spacing: 8) {
-                        KingfisherImageView(image: item.image)
-                        VStack(alignment: .leading) {
-                            Text(item.name.prefix(20))
-                                .font(.headline)
-                            Text("Episodes: \(item.episode.count)")
-                                .font(.subheadline)
+                CharacterRow(item: item)
+                    .onAppear {
+                        Task {
+                            try? await viewModel.loadMoreIfNeeded()
                         }
                     }
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                                            .font(.system(.footnote, design: .default).weight(.semibold))
-                                            .foregroundColor(Color(UIColor.tertiaryLabel))
-                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Characters")
-            .background(Color.secondary.opacity(0.15).ignoresSafeArea()) 
+            .navigationDestination(for: UIModel.self) { selectedItem in
+                CharactersDetailView(characterDetails: selectedItem)
+            }
+            .background(Color.secondary.opacity(0.15).ignoresSafeArea())
+            .task {
+                do {
+                    try await viewModel.initialLoad()
+                } catch {
+                    print("Failed to load characters: \(error)")
+                }
+            }
         }
-        .task {
-            do {
-                try await viewModel.getCharacters()
-            } catch {
-                print("Failed to load characters: \(error)")
+    }
+}
+#Preview {
+    CharactersView()
+}
+
+struct CharacterRow: View {
+    private let item: UIModel
+    
+    init(item: UIModel) {
+        self.item = item
+    }
+    
+    var body: some View {
+        NavigationLink(value: item) {
+            HStack(spacing: 8) {
+                KingfisherImageView(image: item.image)
+                VStack(alignment: .leading) {
+                    Text(item.name.prefix(20))
+                        .font(.headline)
+                    Text("Episodes: \(item.episode.count)")
+                        .font(.subheadline)
+                }
             }
         }
     }
 }
 
-#Preview {
-    //here need to add preview so that without running code we can able to see
-    CharactersView()
-}

@@ -1,6 +1,6 @@
 import Foundation
 
-struct UIModel {
+struct UIModel: Identifiable, Hashable {
     let id: Int
     let name: String
     let image: String

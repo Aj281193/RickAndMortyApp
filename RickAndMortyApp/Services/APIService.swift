@@ -2,7 +2,7 @@ import Foundation
 
 protocol APIServiceProtocol: Sendable {
     func get<T: Decodable>(
-        _ endpoint: String,
+        _ url: URL,
         as type: T.Type
     ) async throws -> T
 }
@@ -17,10 +17,6 @@ enum APIError: Error {
 }
 
 final actor APIService: APIServiceProtocol {
-    private var baseURL: URL {
-        URL(string: "https://rickandmortyapi.com/api")!
-    }
-
     private let session: URLSession
     private let decoder: JSONDecoder
 
@@ -31,11 +27,10 @@ final actor APIService: APIServiceProtocol {
     }
 
     nonisolated func get<T: Decodable>(
-        _ endpoint: String,
+        _ url: URL,
         as type: T.Type
     ) async throws -> T {
         
-        let url = await baseURL.appending(path: endpoint)
         let (data, response) = try await session.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse else {
