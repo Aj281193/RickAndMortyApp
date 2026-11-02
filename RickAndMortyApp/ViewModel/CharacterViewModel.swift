@@ -11,12 +11,11 @@ import Combine
 
 final class CharacterViewModel: ObservableObject {
     @Published var uiModelResult: [UIModel] = []
-    @Published var hasMorePublic: Bool = true
-
+    
     private var isLoading = false
     private var hasMore = true
-    private var nextPageURL: URL? = URL(string: "https://rickandmortyapi.com/api/character")
-
+    private var nextPageToken: String? = nil
+    
     private let repository: CharacterRepositoryProtocol
 
     init(_ repository: CharacterRepositoryProtocol) {
@@ -33,30 +32,22 @@ final class CharacterViewModel: ObservableObject {
     }
 
     private func loadNextPageIfNeeded() async throws {
-        guard hasMore, !isLoading, let url = nextPageURL else { return }
+        guard hasMore, !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let page = try await repository.fetchCharacters(from: url)
+            let page = try await repository.fetchCharacters(pageToken: nextPageToken)
             let mapped = UIModel.map(from: page.results)
 
             await MainActor.run {
                 self.uiModelResult.append(contentsOf: mapped)
-                if let nextStr = page.info.next, let nextURL = URL(string: nextStr) {
-                    self.nextPageURL = nextURL
-                    self.hasMore = true
-                } else {
-                    self.nextPageURL = nil
-                    self.hasMore = false
-                }
-                self.hasMorePublic = self.hasMore
+                self.nextPageToken = page.info.nextToken
+                self.hasMore = (self.nextPageToken != nil)
             }
         } catch {
             await MainActor.run {
-                // stop or allow retry depending on your UX
                 self.hasMore = false
-                self.hasMorePublic = self.hasMore
             }
         }
     }

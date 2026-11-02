@@ -1,4 +1,7 @@
 // MARK: - CharactersModelResponse
+
+import Foundation
+
 struct CharactersModel: Codable {
     let info: Info
     let results: [CharactersResponseResult]
@@ -75,3 +78,12 @@ enum Status: String, Codable, Hashable {
 }
 
 
+extension Info {
+    var nextToken: String? {
+        guard let next, let url = URL(string: next),
+              let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let pageItem = comps.queryItems?.first(where: { $0.name == "page" }),
+              let value = pageItem.value else { return nil }
+        return value
+    }
+}
