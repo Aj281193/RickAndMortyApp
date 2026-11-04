@@ -1,5 +1,3 @@
-import Foundation
-
 
 protocol CharacterRepositoryProtocol {
     func fetchCharacters(pageToken: String?) async throws -> CharactersModel

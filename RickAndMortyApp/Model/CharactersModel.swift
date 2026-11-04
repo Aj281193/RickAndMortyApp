@@ -1,5 +1,3 @@
-// MARK: - CharactersModelResponse
-
 import Foundation
 
 struct CharactersModel: Codable {

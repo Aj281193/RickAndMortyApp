@@ -19,15 +19,7 @@ struct CharactersView: View {
     
     var body: some View {
         NavigationStack {
-            List(viewModel.uiModelResult, id: \.id) { item in
-                CharacterRow(item: item)
-                    .onAppear {
-                        Task {
-                            try? await viewModel.loadMoreIfNeeded()
-                        }
-                    }
-            }
-            .listStyle(.insetGrouped)
+            CharactersListView()
             .navigationTitle("Characters")
             .navigationDestination(for: UIModel.self) { selectedItem in
                 CharactersDetailView(characterDetails: selectedItem)
@@ -42,30 +34,20 @@ struct CharactersView: View {
             }
         }
     }
+    
+    private func CharactersListView() -> some View {
+        return List(viewModel.uiModelResult, id: \.id) { item in
+            CharacterRow(item: item)
+                .onAppear {
+                    Task {
+                        try? await viewModel.loadMoreIfNeeded()
+                    }
+                }
+        }
+        .listStyle(.insetGrouped)
+    }
 }
 #Preview {
     CharactersView()
-}
-
-struct CharacterRow: View {
-    private let item: UIModel
-    
-    init(item: UIModel) {
-        self.item = item
-    }
-    
-    var body: some View {
-        NavigationLink(value: item) {
-            HStack(spacing: 8) {
-                KingfisherImageView(image: item.image)
-                VStack(alignment: .leading) {
-                    Text(item.name.prefix(20))
-                        .font(.headline)
-                    Text("Episodes: \(item.episode.count)")
-                        .font(.subheadline)
-                }
-            }
-        }
-    }
 }
 
