@@ -11,6 +11,7 @@ import Combine
 
 final class CharacterViewModel: ObservableObject {
     @Published var uiModelResult: [UIModel] = []
+    @Published var originalQuery: String = ""
     
     private var isLoading = false
     private var hasMore = true
@@ -20,6 +21,29 @@ final class CharacterViewModel: ObservableObject {
 
     init(_ repository: CharacterRepositoryProtocol) {
         self.repository = repository
+    }
+
+    @MainActor
+    func search(by query: String) async throws {
+        // Normalize query (trim whitespace)
+        let currentQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // If query hasn't changed, do nothing
+        guard currentQuery != originalQuery else { return }
+
+        // Update query and reset pagination state
+        originalQuery = currentQuery
+        uiModelResult = []
+        hasMore = true
+        nextPageToken = nil
+
+        // Kick off a fresh load for the first page with the new query
+        do {
+            try await loadNextPageIfNeeded()
+        } catch {
+            // On error, stop further pagination for this query
+            hasMore = false
+        }
     }
 
     func initialLoad() async throws {
@@ -37,7 +61,7 @@ final class CharacterViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let page = try await repository.fetchCharacters(pageToken: nextPageToken)
+            let page = try await repository.fetchCharacters(pageToken: nextPageToken, name: originalQuery.isEmpty ? nil : originalQuery)
             let mapped = UIModel.map(from: page.results)
 
             await MainActor.run {
@@ -52,3 +76,4 @@ final class CharacterViewModel: ObservableObject {
         }
     }
 }
+

@@ -10,6 +10,8 @@ import SwiftUI
 struct CharactersView: View {
     
     @StateObject private var viewModel: CharacterViewModel
+    @State private var searchDebounceTask: Task<Void, Never>? = nil
+    @State private var searchText = ""
     
     init() {
         let service = APIService()
@@ -20,6 +22,7 @@ struct CharactersView: View {
     var body: some View {
         NavigationStack {
             CharactersListView()
+            .searchable(text: $searchText, prompt: "Search characters by name")
             .navigationTitle("Characters")
             .navigationDestination(for: UIModel.self) { selectedItem in
                 CharactersDetailView(characterDetails: selectedItem)
@@ -30,6 +33,23 @@ struct CharactersView: View {
                     try await viewModel.initialLoad()
                 } catch {
                     print("Failed to load characters: \(error)")
+                }
+            }
+            .onChange(of: searchText) { _, newValue in
+                //cancel the running task
+                searchDebounceTask?.cancel()
+                //start the fresh task
+                searchDebounceTask = Task {
+                    do {
+                        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds debounce
+                        guard !Task.isCancelled else { return }
+                        try await viewModel.search(by: newValue)
+                    } catch {
+                        // Swallow cancellation and log other errors
+                        if (error as? CancellationError) == nil {
+                            print("Search task failed: \(error)")
+                        }
+                    }
                 }
             }
         }
@@ -50,4 +70,3 @@ struct CharactersView: View {
 #Preview {
     CharactersView()
 }
-
