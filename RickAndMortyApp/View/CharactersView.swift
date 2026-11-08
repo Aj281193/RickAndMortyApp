@@ -41,11 +41,10 @@ struct CharactersView: View {
                 //start the fresh task
                 searchDebounceTask = Task {
                     do {
-                        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds debounce
+                        try await Task.sleep(nanoseconds: 300_000_000)
                         guard !Task.isCancelled else { return }
                         try await viewModel.search(by: newValue)
                     } catch {
-                        // Swallow cancellation and log other errors
                         if (error as? CancellationError) == nil {
                             print("Search task failed: \(error)")
                         }

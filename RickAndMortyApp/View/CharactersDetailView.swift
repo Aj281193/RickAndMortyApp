@@ -24,17 +24,23 @@ struct CharactersDetailView: View {
                 )
                 HStack {
                     Text(characterDetails.name)
-                        .font(.headline)
+                    .font(.headline)
                     Spacer()
                     Label("\(characterDetails.episode.count)", systemImage: "film")
                         .padding(.trailing, 10)
                 }
+                .accessibilityLabel(Text(verbatim: "\(characterDetails.name), Episodes: \(characterDetails.episode.count)"))
+                .accessibilityHint(Text(verbatim: "Shows character details"))
                 VStack(alignment: .leading) {
                     HStack(spacing: 20) {
                         StatusBadgeView(status: characterDetails.status)
+                            .accessibilityLabel(Text(verbatim: "\(characterDetails.status)"))
                         ChipView(text: characterDetails.species)
+                            .accessibilityLabel(Text(verbatim: "\(characterDetails.species)"))
                         ChipView(text: characterDetails.gender)
+                            .accessibilityLabel(Text(verbatim: "\(characterDetails.gender)"))
                         ChipView(text: characterDetails.location)
+                            .accessibilityLabel(Text(verbatim: "\(characterDetails.location)"))
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

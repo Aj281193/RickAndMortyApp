@@ -25,6 +25,7 @@ struct CharacterRow: View {
                         .font(.subheadline)
                 }
             }
+            .accessibilityLabel(Text(verbatim: "\(item.name)"))
         }
     }
 }
