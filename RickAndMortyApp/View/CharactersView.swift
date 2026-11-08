@@ -12,6 +12,7 @@ struct CharactersView: View {
     @StateObject private var viewModel: CharacterViewModel
     @State private var searchDebounceTask: Task<Void, Never>? = nil
     @State private var searchText = ""
+    @State private var isSearching = false
     
     init() {
         let service = APIService()
@@ -36,19 +37,33 @@ struct CharactersView: View {
                 }
             }
             .onChange(of: searchText) { _, newValue in
+                isSearching = true
                 //cancel the running task
                 searchDebounceTask?.cancel()
                 //start the fresh task
                 searchDebounceTask = Task {
                     do {
                         try await Task.sleep(nanoseconds: 300_000_000)
-                        guard !Task.isCancelled else { return }
+                        if Task.isCancelled {
+                            isSearching = false
+                            return
+                        }
                         try await viewModel.search(by: newValue)
+                        isSearching = false
                     } catch {
                         if (error as? CancellationError) == nil {
                             print("Search task failed: \(error)")
+                            isSearching = false
                         }
                     }
+                }
+            }.overlay {
+                if !isSearching && viewModel.uiModelResult.isEmpty && !searchText.isEmpty {
+                    ContentUnavailableView(
+                        "Please enter valid character Name",
+                        systemImage: "person.fill.questionmark",
+                        description: Text("We couldn't find any characters matching '\(searchText)'")
+                    )
                 }
             }
         }
