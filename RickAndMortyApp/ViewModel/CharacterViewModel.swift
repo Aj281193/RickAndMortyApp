@@ -12,6 +12,7 @@ import Combine
 final class CharacterViewModel: ObservableObject {
     @Published var uiModelResult: [UIModel] = []
     @Published var originalQuery: String = ""
+    @Published var isCharacterLoading = true
     
     private var isLoading = false
     private var hasMore = true
@@ -35,6 +36,7 @@ final class CharacterViewModel: ObservableObject {
         originalQuery = currentQuery
         uiModelResult = []
         hasMore = true
+        isCharacterLoading = true
         nextPageToken = nil
 
         // Kick off a fresh load for the first page with the new query
@@ -43,11 +45,20 @@ final class CharacterViewModel: ObservableObject {
         } catch {
             // On error, stop further pagination for this query
             hasMore = false
+            isCharacterLoading = false
         }
     }
 
     func initialLoad() async throws {
-        guard uiModelResult.isEmpty else { return }
+        guard uiModelResult.isEmpty else {
+            isCharacterLoading = false
+            return
+        }
+        //initialize the feild for first time call
+        hasMore = true
+        originalQuery = ""
+        isCharacterLoading = true
+        
         try await loadNextPageIfNeeded()
     }
 
@@ -72,6 +83,7 @@ final class CharacterViewModel: ObservableObject {
         } catch {
             await MainActor.run {
                 self.hasMore = false
+                self.isCharacterLoading = false
             }
         }
     }

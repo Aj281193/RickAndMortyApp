@@ -22,49 +22,75 @@ struct CharactersView: View {
     
     var body: some View {
         NavigationStack {
-            CharactersListView()
-            .searchable(text: $searchText, prompt: "Search characters by name")
-            .navigationTitle("Characters")
-            .navigationDestination(for: UIModel.self) { selectedItem in
-                CharactersDetailView(characterDetails: selectedItem)
-            }
-            .background(Color.secondary.opacity(0.15).ignoresSafeArea())
-            .task {
-                do {
-                    try await viewModel.initialLoad()
-                } catch {
-                    print("Failed to load characters: \(error)")
-                }
-            }
-            .onChange(of: searchText) { _, newValue in
-                isSearching = true
-                //cancel the running task
-                searchDebounceTask?.cancel()
-                //start the fresh task
-                searchDebounceTask = Task {
-                    do {
-                        try await Task.sleep(nanoseconds: 300_000_000)
-                        if Task.isCancelled {
-                            isSearching = false
-                            return
+            if !viewModel.isCharacterLoading && searchText.isEmpty {
+                ContentUnavailableView(
+                    "Characters Loading failed",
+                    systemImage: "exclamationmark.triangle.fill",
+                    description: Text("contentUnavailable")
+                )
+                .symbolRenderingMode(.multicolor)
+                .safeAreaInset(edge: .bottom) {
+                    Button(action: {
+                        Task {
+                            try await viewModel.initialLoad()
                         }
-                        try await viewModel.search(by: newValue)
-                        isSearching = false
-                    } catch {
-                        if (error as? CancellationError) == nil {
-                            print("Search task failed: \(error)")
-                            isSearching = false
+                    }) {
+                        Label("Retry Loading", systemImage: "arrow.clockwise")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentColor)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
+                }
+            } else {
+                CharactersListView()
+                    .searchable(text: $searchText, prompt: "Search characters by name")
+                    .navigationTitle("Characters")
+                    .navigationDestination(for: UIModel.self) { selectedItem in
+                        CharactersDetailView(characterDetails: selectedItem)
+                    }
+                    .background(Color.secondary.opacity(0.15).ignoresSafeArea())
+                    .task {
+                        do {
+                            try await viewModel.initialLoad()
+                        } catch {
+                            print("Failed to load characters: \(error)")
                         }
                     }
-                }
-            }.overlay {
-                if !isSearching && viewModel.uiModelResult.isEmpty && !searchText.isEmpty {
-                    ContentUnavailableView(
-                        "Please enter valid character Name",
-                        systemImage: "person.fill.questionmark",
-                        description: Text("We couldn't find any characters matching '\(searchText)'")
-                    )
-                }
+                    .onChange(of: searchText) { _, newValue in
+                        isSearching = true
+                        //cancel the running task
+                        searchDebounceTask?.cancel()
+                        //start the fresh task
+                        searchDebounceTask = Task {
+                            do {
+                                try await Task.sleep(nanoseconds: 300_000_000)
+                                if Task.isCancelled {
+                                    isSearching = false
+                                    return
+                                }
+                                try await viewModel.search(by: newValue)
+                                isSearching = false
+                            } catch {
+                                if (error as? CancellationError) == nil {
+                                    print("Search task failed: \(error)")
+                                    isSearching = false
+                                }
+                            }
+                        }
+                    }.overlay {
+                        if !isSearching && viewModel.uiModelResult.isEmpty && !searchText.isEmpty {
+                            ContentUnavailableView(
+                                "Please enter valid character Name",
+                                systemImage: "person.fill.questionmark",
+                                description: Text("We couldn't find any characters matching '\(searchText)'")
+                            )
+                        }
+                    }
             }
         }
     }
