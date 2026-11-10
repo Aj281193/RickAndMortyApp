@@ -12,11 +12,12 @@ import Combine
 final class CharacterViewModel: ObservableObject {
     @Published var uiModelResult: [UIModel] = []
     @Published var originalQuery: String = ""
-    @Published var isCharacterLoading = true
+    @Published var didInitialLoadFail = false
+    @Published var isSearching = false
     
-    private var isLoading = false
     private var hasMore = true
     private var nextPageToken: String? = nil
+    private var searchDebounceTask: Task<Void, Never>? = nil
     
     private let repository: CharacterRepositoryProtocol
 
@@ -26,50 +27,57 @@ final class CharacterViewModel: ObservableObject {
 
     @MainActor
     func search(by query: String) async throws {
-        // Normalize query (trim whitespace)
-        let currentQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // If query hasn't changed, do nothing
-        guard currentQuery != originalQuery else { return }
-
-        // Update query and reset pagination state
-        originalQuery = currentQuery
-        uiModelResult = []
-        hasMore = true
-        isCharacterLoading = true
-        nextPageToken = nil
-
-        // Kick off a fresh load for the first page with the new query
-        do {
-            try await loadNextPageIfNeeded()
-        } catch {
-            // On error, stop further pagination for this query
-            hasMore = false
-            isCharacterLoading = false
+        isSearching = false
+        
+        //cancel the running task
+        searchDebounceTask?.cancel()
+        //start the fresh task
+        searchDebounceTask = Task {
+            
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            
+            if Task.isCancelled {
+                isSearching = false
+                return
+            }
+            // Normalize query (trim whitespace)
+            let currentQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // If query hasn't changed, do nothing
+            guard currentQuery != originalQuery else { return }
+            
+            // Update query and reset pagination state
+            originalQuery = currentQuery
+            isSearching = !originalQuery.isEmpty
+            uiModelResult = []
+            hasMore = true
+            nextPageToken = nil
+            
+            // Kick off a fresh load for the first page with the new query
+            do {
+                try await loadNextPageIfNeeded()
+            } catch {
+                hasMore = false
+                isSearching = false
+            }
         }
     }
 
     func initialLoad() async throws {
+        didInitialLoadFail = false
         guard uiModelResult.isEmpty else {
-            isCharacterLoading = false
+            didInitialLoadFail = false
             return
         }
         //initialize the feild for first time call
         hasMore = true
         originalQuery = ""
-        isCharacterLoading = true
         
         try await loadNextPageIfNeeded()
     }
 
-    func loadMoreIfNeeded() async throws {
-        try await loadNextPageIfNeeded()
-    }
-
-    private func loadNextPageIfNeeded() async throws {
-        guard hasMore, !isLoading else { return }
-        isLoading = true
-        defer { isLoading = false }
+    func loadNextPageIfNeeded() async throws {
+        guard hasMore else { return }
 
         do {
             let page = try await repository.fetchCharacters(pageToken: nextPageToken, name: originalQuery.isEmpty ? nil : originalQuery)
@@ -79,11 +87,13 @@ final class CharacterViewModel: ObservableObject {
                 self.uiModelResult.append(contentsOf: mapped)
                 self.nextPageToken = page.info.nextToken
                 self.hasMore = (self.nextPageToken != nil)
+                self.isSearching = false
             }
         } catch {
             await MainActor.run {
                 self.hasMore = false
-                self.isCharacterLoading = false
+                self.isSearching = false
+                if self.originalQuery.isEmpty { self.didInitialLoadFail = true }
             }
         }
     }
