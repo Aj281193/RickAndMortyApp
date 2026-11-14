@@ -52,7 +52,7 @@ struct CharactersDetailView: View {
             .padding(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
             .navigationTitle("Character Details")
             .navigationBarTitleDisplayMode(.inline)
-            .background(Color.secondary.opacity(0.15).ignoresSafeArea())
+            .background(Color.secondary.opacity(0.15))
     }
 }
 
