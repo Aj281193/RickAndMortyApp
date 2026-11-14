@@ -1,3 +1,6 @@
+
+A modern, native iOS application built with **Swift** and **SwiftUI** and **Kingfisher** for caching image that consumes the [Rick and Morty API] to explore characters from the show. Designed with clean architecture principles, structured concurrency, and smooth user interactions.
+
 ## ✅ Acceptance Criteria
 
 The application should meet the following functional and technical acceptance criteria.
