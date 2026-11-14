@@ -22,12 +22,16 @@ struct CharactersDetailView: View {
                     width: 350,
                     height: 350
                 )
+                .aspectRatio(1.5, contentMode: .fill)
                 HStack {
                     Text(characterDetails.name)
                     .font(.headline)
                     Spacer()
-                    Label("\(characterDetails.episode.count)", systemImage: "film")
-                        .padding(.trailing, 10)
+                    HStack(spacing: 12) {
+                        Label("\(characterDetails.episode.count)", systemImage: "film.fill")
+                            .foregroundStyle(.secondary)
+                            .padding(.trailing, 10)
+                    }
                 }
                 .accessibilityLabel(Text(verbatim: "\(characterDetails.name), Episodes: \(characterDetails.episode.count)"))
                 .accessibilityHint(Text(verbatim: "Shows character details"))
@@ -47,8 +51,8 @@ struct CharactersDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
             .navigationTitle("Character Details")
-            .navigationBarTitleDisplayMode(.large)
-            .background(Color.secondary.opacity(0.15).ignoresSafeArea()) 
+            .navigationBarTitleDisplayMode(.inline)
+            .background(Color.secondary.opacity(0.15).ignoresSafeArea())
     }
 }
 

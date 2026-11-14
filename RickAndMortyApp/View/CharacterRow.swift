@@ -21,8 +21,10 @@ struct CharacterRow: View {
                 VStack(alignment: .leading) {
                     Text(item.name.prefix(20))
                         .font(.headline)
+                        .foregroundStyle(.primary)
                     Text("Episodes: \(item.episode.count)")
                         .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
             }
             .accessibilityLabel(Text(verbatim: "\(item.name)"))

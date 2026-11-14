@@ -77,15 +77,32 @@ struct CharactersView: View {
     }
     
     private func CharactersListView() -> some View {
-        return List(viewModel.uiModelResult, id: \.id) { item in
-            CharacterRow(item: item)
-                .onAppear {
-                    Task {
-                        try? await viewModel.loadNextPageIfNeeded()
-                    }
+        List {
+            Section {
+                ForEach(viewModel.uiModelResult, id: \.id) { item in
+                    CharacterRow(item: item)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color(.secondarySystemBackground))
+                                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                        )
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .onAppear {
+                            Task { try? await viewModel.loadNextPageIfNeeded() }
+                        }
                 }
+            } header: {
+                Color.clear
+                    .frame(height: 8)
+                    .listRowInsets(EdgeInsets())
+            }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.secondary.opacity(0.15))
     }
 }
 #Preview {

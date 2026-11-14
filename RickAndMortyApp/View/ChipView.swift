@@ -13,10 +13,10 @@ struct ChipView: View {
     var body: some View {
         Text(text)
             .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .background(Capsule()
-                .fill(Color.secondary.opacity(0.12)))
+                .fill(Color.secondary.opacity(0.05)))
             .foregroundStyle(.secondary)
             .lineLimit(1)
     }
